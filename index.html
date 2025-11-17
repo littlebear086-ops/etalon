@@ -332,6 +332,20 @@
             background: #e9f4ff;
         }
 
+        .service-item__title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .service-item__price {
+            margin: 0;
+            font-size: 14px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
         .service-item__match {
             font-size: 11px;
             color: var(--accent);
@@ -527,6 +541,18 @@
         .toast--visible {
             opacity: 1;
             transform: translate(-50%, 0);
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
         }
 
         @keyframes fadeIn {
@@ -1030,7 +1056,7 @@
 
         selectors.categories.querySelectorAll('.card').forEach(card => {
             card.addEventListener('click', () => selectCategory(card.dataset.category));
-            card.addEventListener('keypress', (e) => {
+            card.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     selectCategory(card.dataset.category);
@@ -1110,7 +1136,7 @@
 
         selectors.servicesList.querySelectorAll('.service-item').forEach(item => {
             item.addEventListener('click', () => selectService(item.dataset.service));
-            item.addEventListener('keypress', (e) => {
+            item.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     selectService(item.dataset.service);
@@ -1464,23 +1490,32 @@
 
     function loadState() {
         try {
-            const saved = JSON.parse(localStorage.getItem('alp-calculator'));
+            const saved = localStorage.getItem('alp-calculator');
             if (!saved) return;
-            Object.assign(state, saved);
-            if (state.categoryKey) {
+            const parsed = JSON.parse(saved);
+            if (!parsed || typeof parsed !== 'object') return;
+            
+            // Валидация загруженных данных
+            if (parsed.categoryKey && servicesData[parsed.categoryKey]) {
+                Object.assign(state, parsed);
                 selectCategory(state.categoryKey);
-                if (state.serviceId) {
+                if (state.serviceId && servicesData[state.categoryKey].services.find(s => s.id === state.serviceId)) {
                     selectService(state.serviceId);
-                    if (state.step) {
+                    if (state.step && state.step >= 1 && state.step <= 4) {
                         showStep(state.step);
                     }
-                    if (state.cost) {
+                    if (state.cost && typeof state.cost === 'object') {
                         renderResult();
                     }
                 }
             }
-        } catch {
-            /* ignore */
+        } catch (e) {
+            // Очистка повреждённых данных
+            try {
+                localStorage.removeItem('alp-calculator');
+            } catch {
+                /* ignore */
+            }
         }
     }
 
