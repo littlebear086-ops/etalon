@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор стоимости услуг промышленных альпинистов | Онлайн-расчёт</title>
     <meta name="description" content="Узнайте стоимость услуг промышленных альпинистов: мойка окон и фасадов, монтаж рекламных конструкций, фасадные и такелажные работы. Онлайн-расчёт с подсказками и прозрачной детализацией.">
+    <meta name="keywords" content="промышленный альпинизм, калькулятор стоимости, мойка фасадов, высотные работы, etalomaip.ru">
+    <link rel="canonical" href="https://etalomaip.ru/calculator">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -529,6 +531,35 @@
             transform: translate(-50%, 0);
         }
 
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -760,6 +791,12 @@
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<footer>
+    <p>Калькулятор стоимости услуг промышленных альпинистов</p>
+    <p><a href="https://etalomaip.ru" target="_blank" rel="noopener noreferrer">etalomaip.ru</a> — профессиональные высотные работы</p>
+    <p style="margin-top: 8px; font-size: 12px;">© 2025. Все права защищены.</p>
+</footer>
 
 <script>
 (() => {
@@ -1427,7 +1464,37 @@
             showToast('Сначала выполните расчёт');
             return;
         }
-        showToast('Заявка отправлена. Менеджер свяжется с вами.');
+        
+        const service = getSelectedService();
+        const orderData = {
+            category: servicesData[state.categoryKey].name,
+            service: service.name,
+            cost: state.cost.total,
+            details: {
+                base: state.cost.base,
+                height: state.cost.height,
+                urgency: state.cost.urgency,
+                complexity: state.cost.complexity
+            },
+            params: state.params
+        };
+        
+        // Формируем ссылку для отправки заявки на etalomaip.ru
+        const orderText = encodeURIComponent([
+            'Заявка с калькулятора:',
+            `Категория: ${orderData.category}`,
+            `Услуга: ${orderData.service}`,
+            `Стоимость: ${orderData.cost.toLocaleString('ru-RU')} ₽`,
+            '',
+            'Параметры:',
+            JSON.stringify(orderData.params, null, 2)
+        ].join('\n'));
+        
+        // Можно открыть форму обратной связи или отправить на email
+        const mailtoLink = `mailto:info@etalomaip.ru?subject=Заявка с калькулятора&body=${orderText}`;
+        window.location.href = mailtoLink;
+        
+        showToast('Открывается форма отправки заявки...');
     }
 
     function copySummary() {
