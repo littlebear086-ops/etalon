@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор стоимости услуг промышленных альпинистов | Онлайн-расчёт</title>
+    <meta name="description" content="Узнайте стоимость услуг промышленных альпинистов: мойка окон и фасадов, монтаж рекламных конструкций, фасадные и такелажные работы. Онлайн-расчёт с подсказками и прозрачной детализацией.">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #f4f6fb;
+            --surface: #fff;
+            --text: #1c1d21;
+            --muted: #6b707b;
+            --accent: #0382f8;
+            --accent-dark: #0368d4;
+            --success: #1cbf75;
+            --danger: #f54747;
+            --border: #e1e6f0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page {
+            min-height: 100vh;
+            padding: 24px 16px 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        header {
+            text-align: center;
+            max-width: 920px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: clamp(26px, 4vw, 34px);
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .calculator {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(3, 130, 248, 0.08);
+            overflow: hidden;
+        }
+
+        .calculator__progress {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 32px;
+            background: #f0f4ff;
+            gap: 12px;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 18px;
+            right: -6px;
+            width: 12px;
+            height: 2px;
+            background: var(--border);
+        }
+
+        .progress-step__number {
+            display: inline-flex;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            border: 2px solid transparent;
+            background: #d9e8ff;
+            color: var(--text);
+            font-weight: 600;
+            transition: transform 0.25s ease;
+        }
+
+        .progress-step--active .progress-step__number {
+            background: var(--accent);
+            color: #fff;
+            border-color: transparent;
+            transform: scale(1.05);
+        }
+
+        .progress-step--done .progress-step__number {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .progress-step__label {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .calculator__body {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+            padding: 32px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .step {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .step--active {
+            display: flex;
+        }
+
+        .step__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .step__header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .hint {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .grid--2 {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #fafdff;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 12px 30px rgba(3, 130, 248, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card--selectable {
+            cursor: pointer;
+        }
+
+        .card--selected {
+            border-color: var(--accent);
+            background: #e9f4ff;
+        }
+
+        .card__title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card__price {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .card__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #eef6ff;
+            color: var(--accent);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .utility-panel {
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fdfdfd;
+        }
+
+        .utility-panel__title {
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .utility-panel ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .search {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .search__box {
+            position: relative;
+        }
+
+        .search__input {
+            width: 100%;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 44px 12px 14px;
+            font-size: 15px;
+        }
+
+        .search__input:focus {
+            border-color: var(--accent);
+            outline: 2px solid rgba(3, 130, 248, 0.2);
+        }
+
+        .search__icon,
+        .search__reset {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+        }
+
+        .search__icon {
+            right: 0;
+            pointer-events: none;
+        }
+
+        .search__reset {
+            right: 32px;
+            border: none;
+            background: none;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .search__reset--visible {
+            opacity: 1;
+        }
+
+        .search__meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .service-item {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .service-item:hover {
+            border-color: var(--accent);
+            background: #f7fbff;
+        }
+
+        .service-item--selected {
+            border-color: var(--accent);
+            background: #e9f4ff;
+        }
+
+        .service-item__match {
+            font-size: 11px;
+            color: var(--accent);
+            background: #e1f0ff;
+            border-radius: 6px;
+            padding: 2px 8px;
+            width: max-content;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            border-radius: 14px;
+            border: 1px dashed var(--border);
+            color: var(--muted);
+            background: #fdfdfd;
+        }
+
+        .inputs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .field label {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .field input,
+        .field select {
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 14px;
+            font-size: 15px;
+            background: #fff;
+        }
+
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--accent);
+            outline: 2px solid rgba(3, 130, 248, 0.2);
+        }
+
+        .field__error {
+            font-size: 12px;
+            color: var(--danger);
+            min-height: 16px;
+        }
+
+        .summary-panel {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            background: linear-gradient(180deg, #f5f9ff 0%, #fff 100%);
+            position: sticky;
+            top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .summary-panel__title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .summary-panel__row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .summary-panel__price {
+            font-size: 30px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 12px 22px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn--primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(3, 130, 248, 0.35);
+        }
+
+        .btn--primary:hover:not(:disabled) {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn--ghost {
+            background: #f0f3fa;
+            color: var(--muted);
+        }
+
+        .result-card {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            background: #f9fffb;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .result-card__status {
+            color: var(--success);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-details {
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #fff;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .result-details__row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .result-details__row strong {
+            font-size: 16px;
+        }
+
+        .badge-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .badge-list__item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #edf7f4;
+            font-size: 13px;
+            color: #226b4d;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            padding: 12px 18px;
+            border-radius: 999px;
+            background: var(--text);
+            color: #fff;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 10;
+        }
+
+        .toast--visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 960px) {
+            .calculator__body {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .calculator__progress {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .progress-step {
+                flex: 1 1 calc(50% - 8px);
+            }
+
+            .calculator__body {
+                padding: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <header>
+        <p class="card__badge" aria-label="Актуальная база цен на 2025 год">✓ Цены актуальны на 2025&nbsp;год</p>
+        <h1>Калькулятор стоимости услуг промышленных альпинистов</h1>
+        <p>Подберите услугу, укажите параметры и получите прозрачный расчёт с учётом высоты, срочности и сложности.</p>
+    </header>
+
+    <section class="calculator" role="form" aria-labelledby="calc-title">
+        <h2 class="sr-only" id="calc-title">Форма расчёта стоимости</h2>
+
+        <nav class="calculator__progress" aria-label="Прогресс расчёта">
+            <button class="progress-step progress-step--active" data-step="1" aria-current="step">
+                <span class="progress-step__number">1</span>
+                <span class="progress-step__label">Категория</span>
+            </button>
+            <button class="progress-step" data-step="2" aria-disabled="true">
+                <span class="progress-step__number">2</span>
+                <span class="progress-step__label">Услуга</span>
+            </button>
+            <button class="progress-step" data-step="3" aria-disabled="true">
+                <span class="progress-step__number">3</span>
+                <span class="progress-step__label">Параметры</span>
+            </button>
+            <button class="progress-step" data-step="4" aria-disabled="true">
+                <span class="progress-step__number">4</span>
+                <span class="progress-step__label">Результат</span>
+            </button>
+        </nav>
+
+        <div class="calculator__body">
+            <section class="steps">
+                <!-- Step 1 -->
+                <article class="step step--active" id="step-1" aria-labelledby="step1-title">
+                    <div class="step__header">
+                        <div>
+                            <p class="hint">Шаг 1</p>
+                            <h2 id="step1-title">Выберите категорию</h2>
+                        </div>
+                    </div>
+                    <div class="grid grid--2" id="categories"></div>
+                    <div class="utility-panel">
+                        <p class="utility-panel__title">Почему расчёт точный?</p>
+                        <ul>
+                            <li>Используем реальные сметы 2025&nbsp;года</li>
+                            <li>Подтягиваем надбавки за высоту, срочность и сложность</li>
+                            <li>Сохраняем последний расчёт, чтобы вернуться к нему</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- Step 2 -->
+                <article class="step" id="step-2" aria-labelledby="step2-title">
+                    <div class="step__header">
+                        <div>
+                            <p class="hint">Шаг 2</p>
+                            <h2 id="step2-title">Найдите конкретную услугу</h2>
+                        </div>
+                        <button class="btn btn--ghost" data-action="back">Назад</button>
+                    </div>
+                    <div class="search">
+                        <label class="sr-only" for="service-search">Поиск по услугам</label>
+                        <div class="search__box">
+                            <input type="search" id="service-search" class="search__input" placeholder="Например, герметизация швов" autocomplete="off">
+                            <button class="search__reset" type="button" id="service-reset" aria-label="Очистить поиск">×</button>
+                            <span class="search__icon" aria-hidden="true">⌕</span>
+                        </div>
+                        <div class="search__meta">
+                            <span id="services-count">Показано 0 услуг</span>
+                            <span id="search-time" aria-live="polite"></span>
+                        </div>
+                    </div>
+                    <div id="services-list" class="grid"></div>
+                    <div class="empty-state" id="services-empty" hidden>
+                        <strong>Ничего не найдено</strong>
+                        <p>Попробуйте сократить запрос или выберите другую категорию.</p>
+                    </div>
+                </article>
+
+                <!-- Step 3 -->
+                <article class="step" id="step-3" aria-labelledby="step3-title">
+                    <div class="step__header">
+                        <div>
+                            <p class="hint">Шаг 3</p>
+                            <h2 id="step3-title">Уточните параметры</h2>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn--ghost" data-action="back">Назад</button>
+                            <button class="btn btn--ghost" data-action="reset">Сбросить шаг</button>
+                        </div>
+                    </div>
+                    <div class="card" id="selected-service-card" aria-live="polite"></div>
+                    <div class="inputs-grid" id="inputs-grid"></div>
+                    <div class="utility-panel">
+                        <p class="utility-panel__title">Подсказка</p>
+                        <ul>
+                            <li>Все обязательные поля отмечены •</li>
+                            <li>Минимальный заказ — 15&nbsp;000&nbsp;₽</li>
+                            <li>Enter в поле обновляет расчёт</li>
+                        </ul>
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn--primary" id="calculate-btn" disabled>Рассчитать стоимость</button>
+                    </div>
+                </article>
+
+                <!-- Step 4 -->
+                <article class="step" id="step-4" aria-labelledby="step4-title">
+                    <div class="step__header">
+                        <div>
+                            <p class="hint">Шаг 4</p>
+                            <h2 id="step4-title">Готовый расчёт</h2>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn--ghost" data-action="back">Изменить</button>
+                            <button class="btn btn--ghost" data-action="new">Новый расчёт</button>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <p class="result-card__status">✓ Расчёт выполнен</p>
+                        <div id="result-service"></div>
+                        <p class="summary-panel__price" id="final-price" aria-live="polite">0 ₽</p>
+                        <div class="result-details">
+                            <div class="result-details__row">
+                                <span>Базовая стоимость</span>
+                                <span id="detail-base">0 ₽</span>
+                            </div>
+                            <div class="result-details__row">
+                                <span>Надбавка за высоту</span>
+                                <span id="detail-height">0 ₽</span>
+                            </div>
+                            <div class="result-details__row">
+                                <span>Надбавка за срочность</span>
+                                <span id="detail-urgency">0 ₽</span>
+                            </div>
+                            <div class="result-details__row">
+                                <span>Надбавка за сложность</span>
+                                <span id="detail-complexity">0 ₽</span>
+                            </div>
+                            <div class="result-details__row">
+                                <span>Минимальный заказ</span>
+                                <span>15&nbsp;000 ₽</span>
+                            </div>
+                            <div class="result-details__row">
+                                <strong>Итого</strong>
+                                <strong id="detail-total">0 ₽</strong>
+                            </div>
+                        </div>
+                        <div class="badge-list">
+                            <div class="badge-list__item">Бесплатный выезд инженера</div>
+                            <div class="badge-list__item">Сертифицированные альпинисты</div>
+                            <div class="badge-list__item">Работаем с юр. и физ. лицами</div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn--ghost" id="new-calculation">Новый расчёт</button>
+                            <button class="btn btn--primary" id="order-call">Оставить заявку</button>
+                        </div>
+                        <small class="hint">Итоговая сумма подтверждается после осмотра объекта специалистом.</small>
+                    </div>
+                </article>
+            </section>
+
+            <aside class="summary-panel" aria-live="polite">
+                <h3 class="summary-panel__title">Предпросмотр</h3>
+                <div class="summary-panel__row">
+                    <span>Категория</span>
+                    <strong id="summary-category">—</strong>
+                </div>
+                <div class="summary-panel__row">
+                    <span>Услуга</span>
+                    <strong id="summary-service">—</strong>
+                </div>
+                <div class="summary-panel__row">
+                    <span>Последний результат</span>
+                    <strong id="summary-date">—</strong>
+                </div>
+                <p class="summary-panel__price" id="preview-price">0 ₽</p>
+                <div class="actions">
+                    <button class="btn btn--ghost" id="summary-copy" disabled>Скопировать расчёт</button>
+                </div>
+            </aside>
+        </div>
+    </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+    const MIN_ORDER = 15000;
+    const HEIGHT_FACTORS = {
+        low: { label: '1–5 этажей', factor: 1 },
+        mid: { label: '6–10 этажей', factor: 1.1 },
+        high: { label: '11–20 этажей', factor: 1.2 },
+        ultra: { label: 'Более 20 этажей', factor: 1.35 }
+    };
+
+    const servicesData = {
+        cleaning: {
+            name: 'Специализированный клининг и обслуживание',
+            description: 'Мойка фасадов, очистка кровель и промышленный клининг',
+            priceRange: 'от 35 ₽/м²',
+            stats: '21 услуга',
+            services: [
+                { id: 'window-cleaning', name: 'Мойка фасадных окон и остекления', price: 45, unit: 'м²' },
+                { id: 'construction-dirt', name: 'Очистка фасадного остекления от строительной грязи', price: 70, unit: 'м²' },
+                { id: 'selective-washing', name: 'Выборочная мойка витражей и окон', price: 300, unit: 'окно' },
+                { id: 'apartment-window', name: 'Мойка окон в квартире с выездом альпиниста', price: 15000, unit: 'выезд', min: 15000 },
+                { id: 'telescopic-washing', name: 'Мойка фасадов телескопической штангой', price: 35, unit: 'м²' },
+                { id: 'high-pressure', name: 'Мойка фасада аппаратом высокого давления', price: 35, unit: 'м²' },
+                { id: 'construction-cleaning', name: 'Очистка фасада от строительных растворов', price: 60, unit: 'м²' },
+                { id: 'salt-removal', name: 'Удаление высолов с фасада', price: 80, unit: 'м²' },
+                { id: 'ventilated-facades', name: 'Чистка вентилируемых фасадов', price: 40, unit: 'м²' },
+                { id: 'dust-removal', name: 'Обеспыливание металлоконструкций', price: 70, unit: 'м.п.' },
+                { id: 'anti-static', name: 'Антистатическая обработка конструкций', price: 150, unit: 'м²' },
+                { id: 'wall-dusting', name: 'Обеспыливание потолков и стен', price: 70, unit: 'м²' },
+                { id: 'snow-removal', name: 'Очистка кровли от снега и наледи', price: 40, unit: 'м²' },
+                { id: 'roof-edge', name: 'Чистка краёв кровли по периметру', price: 100, unit: 'м.п.' },
+                { id: 'cornice-cleaning', name: 'Чистка карнизов и наружных блоков', price: 1200, unit: 'спуск' },
+                { id: 'winter-maintenance', name: 'Абонентское обслуживание кровли зимой', price: 90, unit: 'м²' },
+                { id: 'country-house-snow', name: 'Чистка крыши загородного дома', price: 20000, unit: 'объект', min: 20000 },
+                { id: 'anti-fungal', name: 'Обработка фасадов антигрибковыми составами', price: 100, unit: 'м²' },
+                { id: 'graffiti-removal', name: 'Очистка крыш и фасадов от граффити', price: 0, unit: 'по запросу' },
+                { id: 'roof-washing', name: 'Мойка крыш', price: 100, unit: 'м²' },
+                { id: 'solar-panels', name: 'Очистка солнечных панелей', price: 3000, unit: 'тыс. руб.' }
+            ]
+        },
+        mounting: {
+            name: 'Монтажные и рекламные работы',
+            description: 'Монтаж водостоков, кондиционеров, рекламных конструкций',
+            priceRange: 'от 200 ₽/м.п.',
+            stats: '31 услуга',
+            services: [
+                { id: 'gutter-system', name: 'Установка новой водосточной системы', price: 800, unit: 'м.п.' },
+                { id: 'gutter-existing', name: 'Монтаж водостока на существующие крепления', price: 700, unit: 'м.п.' },
+                { id: 'gutter-dismantling', name: 'Демонтаж водосточной системы', price: 400, unit: 'м.п.' },
+                { id: 'gutter-replacement', name: 'Замена элементов водостока', price: 1500, unit: 'шт' },
+                { id: 'roof-heating', name: 'Монтаж системы обогрева кровли', price: 600, unit: 'м.п.' },
+                { id: 'snow-guards', name: 'Установка снегозадержателей', price: 500, unit: 'м.п.' },
+                { id: 'lightning-protection', name: 'Монтаж молниезащиты', price: 200, unit: 'м.п.' },
+                { id: 'cctv', name: 'Монтаж систем видеонаблюдения', price: 2000, unit: 'шт' },
+                { id: 'ac-installation', name: 'Установка наружных блоков кондиционеров', price: 15000, unit: 'шт' },
+                { id: 'satellite-dishes', name: 'Монтаж спутниковых антенн', price: 5000, unit: 'шт' },
+                { id: 'window-installation', name: 'Установка стеклопакетов', price: 3000, unit: 'м²' },
+                { id: 'window-dismantling', name: 'Демонтаж стеклопакетов', price: 1500, unit: 'м²' },
+                { id: 'facade-net', name: 'Монтаж защитной фасадной сетки', price: 250, unit: 'м²' },
+                { id: 'lighting', name: 'Установка и обслуживание осветительных приборов', price: 1000, unit: 'шт' },
+                { id: 'cable-systems', name: 'Прокладка кабельных систем по фасаду', price: 200, unit: 'м.п.' },
+                { id: 'holiday-decoration', name: 'Монтаж новогоднего оформления', price: 500, unit: 'шт' },
+                { id: 'illumination', name: 'Установка гирлянд и иллюминации', price: 200, unit: 'м.п.' },
+                { id: 'banner-structures', name: 'Монтаж конструкций для баннеров', price: 400, unit: 'м.п.' },
+                { id: 'banner-installation', name: 'Установка баннерных полотен', price: 250, unit: 'м²' },
+                { id: 'light-boxes', name: 'Монтаж световых коробов', price: 1500, unit: 'м²' },
+                { id: '3d-letters', name: 'Установка объёмных букв', price: 1000, unit: 'шт' },
+                { id: 'light-letters', name: 'Монтаж световых букв', price: 1000, unit: 'шт' },
+                { id: 'ad-maintenance', name: 'Обслуживание рекламных конструкций', price: 5000, unit: 'шт' },
+                { id: 'ad-dismantling', name: 'Демонтаж рекламных конструкций', price: 8000, unit: 'объект' },
+                { id: 'welding-works', name: 'Высотные сварочные работы', price: 20000, unit: 'объект' },
+                { id: 'ventilation-grates', name: 'Установка вентиляционных решёток', price: 1500, unit: 'шт' },
+                { id: 'access-systems', name: 'Монтаж систем доступа', price: 1000, unit: 'шт' },
+                { id: 'film-photo', name: 'Альпинист для киносъёмок и фотосессий', price: 15000, unit: 'смена' },
+                { id: 'bird-protection', name: 'Установка птицезащитных систем', price: 300, unit: 'м.п.' },
+                { id: 'media-screens', name: 'Монтаж фасадных медиаэкранов', price: 3000, unit: 'м²' },
+                { id: 'urban-elements', name: 'Крепление элементов благоустройства', price: 800, unit: 'шт' }
+            ]
+        },
+        facade: {
+            name: 'Фасадные работы и ремонт',
+            description: 'Диагностика, герметизация и покраска фасадов',
+            priceRange: 'от 30 ₽/м²',
+            stats: '33 услуги',
+            services: [
+                { id: 'technical-inspection', name: 'Техническое обследование фасада', price: 15000, unit: 'объект', min: 15000 },
+                { id: 'emergency-inspection', name: 'Обследование аварийных участков', price: 100, unit: 'м²' },
+                { id: 'visual-diagnostic', name: 'Визуальная диагностика фасада', price: 400, unit: 'м²' },
+                { id: 'thermal-inspection', name: 'Тепловизионное обследование', price: 15000, unit: 'объект', min: 15000 },
+                { id: 'crack-diagnostic', name: 'Диагностика трещин', price: 200, unit: 'м.п.' },
+                { id: 'crack-repair', name: 'Расшивка и заделка трещин', price: 400, unit: 'м²' },
+                { id: 'plaster-works', name: 'Штукатурные работы по фасаду', price: 600, unit: 'м²' },
+                { id: 'putty-works', name: 'Шпатлевание поверхностей', price: 350, unit: 'м²' },
+                { id: 'priming', name: 'Грунтование фасада перед отделкой', price: 80, unit: 'м²' },
+                { id: 'damage-restoration', name: 'Восстановление повреждений фасада', price: 800, unit: 'м²' },
+                { id: 'slope-repair', name: 'Ремонт откосов и отливов', price: 800, unit: 'м.п.' },
+                { id: 'decorative-elements', name: 'Замена декоративных элементов', price: 1500, unit: 'шт' },
+                { id: 'one-layer-painting', name: 'Покраска фасада в один слой', price: 200, unit: 'м²' },
+                { id: 'multi-layer-painting', name: 'Многослойная покраска фасада', price: 350, unit: 'м²' },
+                { id: 'hydrophobization', name: 'Нанесение гидрофобизирующего состава', price: 80, unit: 'м²' },
+                { id: 'fire-protection', name: 'Огнезащитная обработка фасада', price: 100, unit: 'м²' },
+                { id: 'anti-fungal-treatment', name: 'Антигрибковая обработка', price: 100, unit: 'м²' },
+                { id: 'painting-with-prep', name: 'Покраска с подготовкой поверхности', price: 350, unit: 'м²' },
+                { id: 'primary-sealing', name: 'Первичная герметизация швов', price: 300, unit: 'м.п.' },
+                { id: 'secondary-sealing', name: 'Вторичная герметизация швов', price: 200, unit: 'м.п.' },
+                { id: 'complex-sealing', name: 'Комплексная герметизация швов', price: 1000, unit: 'м.п.' },
+                { id: 'selective-sealing', name: 'Выборочная герметизация', price: 1200, unit: 'м.п.' },
+                { id: 'seam-insulation', name: 'Утепление межпанельных швов', price: 400, unit: 'м.п.' },
+                { id: 'insulation-replacement', name: 'Замена утеплителя в швах', price: 300, unit: 'м.п.' },
+                { id: 'thermopanels', name: 'Монтаж термопанелей', price: 1200, unit: 'м²' },
+                { id: 'ventilated-facade', name: 'Установка вентилируемого фасада', price: 4500, unit: 'м²' },
+                { id: 'balcony-repair', name: 'Ремонт балконов и лоджий', price: 8000, unit: 'шт' },
+                { id: 'waterproofing-restoration', name: 'Восстановление гидроизоляции', price: 350, unit: 'м²' },
+                { id: 'pre-repair-cleaning', name: 'Очистка фасада перед ремонтом', price: 50, unit: 'м²' },
+                { id: 'decorative-dismantling', name: 'Демонтаж декоративных элементов', price: 500, unit: 'шт' },
+                { id: 'capital-repair', name: 'Капитальный ремонт фасада «под ключ»', price: 4000, unit: 'м²' },
+                { id: 'seasonal-maintenance', name: 'Сезонное обслуживание фасадов', price: 30, unit: 'м²' },
+                { id: 'emergency-repair', name: 'Срочный ремонт аварийных участков', price: 15000, unit: 'выезд', min: 15000 }
+            ]
+        },
+        rigging: {
+            name: 'Такелажные работы',
+            description: 'Подъём и спуск грузов, перемещение оборудования',
+            priceRange: 'от 400 ₽/этаж',
+            stats: '22 услуги',
+            services: [
+                { id: 'lifting-200', name: 'Подъём грузов до 200 кг', price: 1000, unit: 'этаж' },
+                { id: 'lifting-400', name: 'Подъём грузов 200–400 кг', price: 2000, unit: 'этаж' },
+                { id: 'lifting-600', name: 'Подъём грузов 400–600 кг', price: 3000, unit: 'этаж' },
+                { id: 'materials-lifting', name: 'Подъём строительных материалов', price: 800, unit: 'этаж' },
+                { id: 'equipment-lifting', name: 'Подъём оборудования и техники', price: 2500, unit: 'этаж' },
+                { id: 'furniture-lifting', name: 'Подъём мебели через окно', price: 1500, unit: 'этаж' },
+                { id: 'descent-200', name: 'Спуск грузов до 200 кг', price: 500, unit: 'этаж' },
+                { id: 'descent-400', name: 'Спуск грузов 200–400 кг', price: 1000, unit: 'этаж' },
+                { id: 'descent-600', name: 'Спуск грузов 400–600 кг', price: 1500, unit: 'этаж' },
+                { id: 'heavy-descent', name: 'Спуск тяжёлых грузов от 600 кг', price: 0, unit: 'по запросу' },
+                { id: 'equipment-descent', name: 'Спуск демонтированного оборудования', price: 1200, unit: 'этаж' },
+                { id: 'debris-descent', name: 'Спуск строительного мусора', price: 400, unit: 'этаж' },
+                { id: 'facade-moving', name: 'Перемещение грузов по фасаду', price: 800, unit: 'м.п.' },
+                { id: 'industrial-rigging', name: 'Такелаж промышленного оборудования', price: 5000, unit: 'объект' },
+                { id: 'alp-rigging', name: 'Альпинист с такелажным комплектом', price: 2000, unit: 'час' },
+                { id: 'cargo-turning', name: 'Кантование грузов на высоте', price: 3000, unit: 'операция' },
+                { id: 'cargo-insurance', name: 'Страхование ценных грузов', price: 0, unit: 'по запросу' },
+                { id: 'loading-unloading', name: 'Погрузо-разгрузочные работы', price: 2000, unit: 'объект' },
+                { id: 'equipment-rental', name: 'Аренда такелажного оборудования', price: 1500, unit: 'день' },
+                { id: 'rigging-consultation', name: 'Консультация по такелажу', price: 0, unit: 'по запросу' },
+                { id: 'emergency-rigging', name: 'Срочный выезд такелажной бригады', price: 30000, unit: 'выезд', min: 30000 },
+                { id: 'tight-spaces', name: 'Такелаж в стеснённых условиях', price: 3000, unit: 'объект' }
+            ]
+        }
+    };
+
+    const selectors = {
+        steps: document.querySelectorAll('.step'),
+        progressButtons: document.querySelectorAll('.progress-step'),
+        categories: document.getElementById('categories'),
+        servicesList: document.getElementById('services-list'),
+        servicesEmpty: document.getElementById('services-empty'),
+        serviceSearch: document.getElementById('service-search'),
+        serviceReset: document.getElementById('service-reset'),
+        servicesCount: document.getElementById('services-count'),
+        searchTime: document.getElementById('search-time'),
+        selectedServiceCard: document.getElementById('selected-service-card'),
+        inputsGrid: document.getElementById('inputs-grid'),
+        calculateBtn: document.getElementById('calculate-btn'),
+        previewPrice: document.getElementById('preview-price'),
+        summaryCategory: document.getElementById('summary-category'),
+        summaryService: document.getElementById('summary-service'),
+        summaryDate: document.getElementById('summary-date'),
+        summaryCopy: document.getElementById('summary-copy'),
+        finalPrice: document.getElementById('final-price'),
+        detailBase: document.getElementById('detail-base'),
+        detailHeight: document.getElementById('detail-height'),
+        detailUrgency: document.getElementById('detail-urgency'),
+        detailComplexity: document.getElementById('detail-complexity'),
+        detailTotal: document.getElementById('detail-total'),
+        resultService: document.getElementById('result-service'),
+        newCalculation: document.getElementById('new-calculation'),
+        orderCall: document.getElementById('order-call'),
+        toast: document.getElementById('toast')
+    };
+
+    const state = {
+        step: 1,
+        categoryKey: null,
+        serviceId: null,
+        searchTerm: '',
+        params: {
+            area: 50,
+            length: 10,
+            count: 1,
+            weight: 200,
+            floors: 5,
+            height: 'low',
+            urgency: 1,
+            complexity: 1
+        },
+        cost: null
+    };
+
+    let filteredServices = [];
+    let debounceTimer = null;
+
+    function init() {
+        renderCategories();
+        bindEvents();
+        loadState();
+        renderSummary();
+    }
+
+    function bindEvents() {
+        selectors.progressButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = Number(btn.dataset.step);
+                if (target < state.step) {
+                    showStep(target);
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-action="back"]').forEach(btn => {
+            btn.addEventListener('click', () => showStep(Math.max(1, state.step - 1)));
+        });
+
+        document.querySelector('[data-action="reset"]')?.addEventListener('click', () => resetStep3());
+        document.querySelector('[data-action="new"]')?.addEventListener('click', () => resetCalculator());
+        selectors.newCalculation?.addEventListener('click', () => resetCalculator());
+        selectors.orderCall?.addEventListener('click', handleOrder);
+
+        selectors.serviceSearch.addEventListener('input', handleSearch);
+        selectors.serviceReset.addEventListener('click', () => {
+            selectors.serviceSearch.value = '';
+            selectors.serviceReset.classList.remove('search__reset--visible');
+            state.searchTerm = '';
+            filterServices();
+        });
+
+        selectors.calculateBtn.addEventListener('click', () => {
+            if (selectors.calculateBtn.disabled) return;
+            state.cost = calculateCost();
+            renderResult();
+            showStep(4);
+            saveState();
+            selectors.summaryCopy.disabled = false;
+        });
+
+        selectors.summaryCopy.addEventListener('click', copySummary);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (document.activeElement.matches('.field input') || document.activeElement.matches('.field select'))) {
+                e.preventDefault();
+                updatePreview();
+            }
+        });
+    }
+
+    function renderCategories() {
+        selectors.categories.innerHTML = Object.entries(servicesData).map(([key, category]) => `
+            <article class="card card--selectable" data-category="${key}" tabindex="0">
+                <div class="card__badge">${category.stats}</div>
+                <h3 class="card__title">${category.name}</h3>
+                <p class="hint">${category.description}</p>
+                <p class="card__price">${category.priceRange}</p>
+                <button class="btn btn--primary" type="button">Выбрать</button>
+            </article>
+        `).join('');
+
+        selectors.categories.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', () => selectCategory(card.dataset.category));
+            card.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectCategory(card.dataset.category);
+                }
+            });
+        });
+    }
+
+    function selectCategory(key) {
+        state.categoryKey = key;
+        state.serviceId = null;
+        selectors.categories.querySelectorAll('.card').forEach(card => card.classList.toggle('card--selected', card.dataset.category === key));
+        renderSummary();
+        showStep(2);
+        renderServices();
+        saveState();
+    }
+
+    function renderServices() {
+        if (!state.categoryKey) return;
+        const { services } = servicesData[state.categoryKey];
+        filteredServices = services;
+        renderServicesList();
+    }
+
+    function handleSearch(e) {
+        const term = e.target.value.trim();
+        selectors.serviceReset.classList.toggle('search__reset--visible', term.length > 0);
+        state.searchTerm = term;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(filterServices, 250);
+    }
+
+    function filterServices() {
+        const start = performance.now();
+        const { services } = servicesData[state.categoryKey];
+        const term = state.searchTerm.toLowerCase();
+
+        if (!term) {
+            filteredServices = services;
+        } else {
+            filteredServices = services
+                .map(service => {
+                    const name = service.name.toLowerCase();
+                    const words = term.split(/\s+/).filter(Boolean);
+                    const matchCount = words.filter(word => name.includes(word)).length;
+                    return {
+                        ...service,
+                        _score: matchCount / words.length,
+                        _match: matchCount === words.length ? 'точное совпадение' : matchCount > 0 ? 'частичное совпадение' : ''
+                    };
+                })
+                .filter(service => service._score > 0)
+                .sort((a, b) => b._score - a._score);
+        }
+
+        renderServicesList();
+        const duration = performance.now() - start;
+        selectors.searchTime.textContent = term ? `Поиск ${duration.toFixed(0)} мс` : '';
+        selectors.servicesCount.textContent = `Показано ${filteredServices.length} из ${services.length}`;
+    }
+
+    function renderServicesList() {
+        if (!filteredServices.length) {
+            selectors.servicesList.innerHTML = '';
+            selectors.servicesEmpty.hidden = false;
+            return;
+        }
+        selectors.servicesEmpty.hidden = true;
+        selectors.servicesList.innerHTML = filteredServices.map(service => `
+            <article class="service-item" data-service="${service.id}" tabindex="0">
+                <p class="service-item__title">${service.name}</p>
+                <p class="service-item__price">${service.price ? `от ${service.price.toLocaleString('ru-RU')} ₽/${service.unit}` : 'Цена по запросу'}</p>
+                ${service._match ? `<span class="service-item__match">${service._match}</span>` : ''}
+            </article>
+        `).join('');
+
+        selectors.servicesList.querySelectorAll('.service-item').forEach(item => {
+            item.addEventListener('click', () => selectService(item.dataset.service));
+            item.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectService(item.dataset.service);
+                }
+            });
+        });
+    }
+
+    function selectService(id) {
+        state.serviceId = id;
+        selectors.servicesList.querySelectorAll('.service-item').forEach(item => {
+            item.classList.toggle('service-item--selected', item.dataset.service === id);
+        });
+        renderSelectedService();
+        renderSummary();
+        showStep(3);
+        saveState();
+    }
+
+    function getSelectedService() {
+        if (!state.categoryKey || !state.serviceId) return null;
+        return servicesData[state.categoryKey].services.find(service => service.id === state.serviceId);
+    }
+
+    function renderSelectedService() {
+        const service = getSelectedService();
+        if (!service) {
+            selectors.selectedServiceCard.innerHTML = '<p>Выберите услугу из списка.</p>';
+            selectors.inputsGrid.innerHTML = '';
+            selectors.calculateBtn.disabled = true;
+            return;
+        }
+
+        selectors.selectedServiceCard.innerHTML = `
+            <p class="card__badge">${servicesData[state.categoryKey].name}</p>
+            <h3>${service.name}</h3>
+            <p>${service.price ? `Базовая ставка: ${service.price.toLocaleString('ru-RU')} ₽/${service.unit}` : 'Стоимость рассчитывается индивидуально'}</p>
+        `;
+
+        buildInputs(service.unit);
+        selectors.calculateBtn.disabled = service.price === 0;
+        updatePreview();
+    }
+
+    function buildInputs(unit) {
+        const inputs = [];
+        const addInput = (id, label, attrs = {}) => {
+            const isRequired = attrs.required !== false;
+            const postfix = isRequired ? ' •' : '';
+            const extra = attrs.hint ? `<small class="hint">${attrs.hint}</small>` : '';
+            const errorId = `${id}-error`;
+            const value = state.params[id] ?? attrs.min ?? 1;
+
+            const inputEl = attrs.type === 'select'
+                ? `<select id="${id}" data-field="${id}">${attrs.options.map(opt => `<option value="${opt.value}" ${opt.value === value ? 'selected' : ''}>${opt.label}</option>`).join('')}</select>`
+                : `<input type="number" id="${id}" data-field="${id}" min="${attrs.min ?? 1}" step="${attrs.step ?? 1}" value="${value}" inputmode="decimal">`;
+
+            inputs.push(`
+                <div class="field" data-field-wrapper="${id}">
+                    <label for="${id}">${label}${postfix}</label>
+                    ${inputEl}
+                    ${extra}
+                    <div class="field__error" id="${errorId}" role="status" aria-live="polite"></div>
+                </div>
+            `);
+        };
+
+        if (unit === 'м²') {
+            addInput('area', 'Площадь работ (м²)', { min: 10, hint: 'Введите суммарную площадь фасада или кровли' });
+        } else if (unit === 'м.п.') {
+            addInput('length', 'Протяжённость (м.п.)', { min: 5, hint: 'Укажите общую длину периметра или швов' });
+        } else if (unit === 'этаж') {
+            addInput('floors', 'Количество этажей', { min: 1, hint: 'Используем для расчёта подъёма/спуска' });
+            addInput('weight', 'Вес груза (кг)', { min: 50, step: 10, hint: 'Определяет коэффициент такелажа' });
+        } else if (['шт', 'окно', 'спуск', 'смена', 'операция', 'день', 'час'].includes(unit)) {
+            addInput('count', 'Количество', { min: 1, hint: 'Сколько элементов нужно обработать' });
+        } else if (unit === 'тыс. руб.') {
+            addInput('count', 'Количество (тыс. руб.)', { min: 1, hint: 'Стоимость партии работ' });
+        }
+
+        if (!['по запросу', 'выезд', 'объект'].includes(unit)) {
+            addInput('height', 'Высота объекта', {
+                type: 'select',
+                options: Object.entries(HEIGHT_FACTORS).map(([value, { label }]) => ({ value, label }))
+            });
+        }
+
+        addInput('urgency', 'Срочность выполнения', {
+            type: 'select',
+            options: [
+                { value: 1, label: 'Стандартная (5–7 дней)' },
+                { value: 1.2, label: 'Срочная (2–3 дня) +20%' },
+                { value: 1.5, label: 'Экстренная (до 24 часов) +50%' }
+            ]
+        });
+
+        addInput('complexity', 'Сложность работ', {
+            type: 'select',
+            options: [
+                { value: 1, label: 'Стандартная' },
+                { value: 1.05, label: 'Средняя (+5%)' },
+                { value: 1.1, label: 'Высокая (+10%)' }
+            ]
+        });
+
+        selectors.inputsGrid.innerHTML = inputs.join('');
+        selectors.inputsGrid.querySelectorAll('[data-field]').forEach(input => {
+            input.addEventListener('input', handleFieldChange);
+            input.addEventListener('change', handleFieldChange);
+        });
+    }
+
+    function handleFieldChange(e) {
+        const field = e.target.dataset.field;
+        let value = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
+        if (e.target.type === 'number') {
+            const min = Number(e.target.min) || 0;
+            if (!Number.isFinite(value) || value < min) {
+                value = min;
+                e.target.value = min;
+            }
+        }
+        state.params[field] = value;
+        validateField(field);
+        updatePreview();
+    }
+
+    function validateField(field) {
+        const wrapper = selectors.inputsGrid.querySelector(`[data-field-wrapper="${field}"]`);
+        if (!wrapper) return true;
+        const input = wrapper.querySelector('[data-field]');
+        const errorEl = wrapper.querySelector('.field__error');
+        let message = '';
+
+        if (input.type === 'number') {
+            const min = Number(input.min) || 0;
+            if (Number(input.value) < min) {
+                message = `Минимум ${min}`;
+            }
+        }
+
+        errorEl.textContent = message;
+        wrapper.classList.toggle('field--invalid', Boolean(message));
+        return !message;
+    }
+
+    function calculateCost() {
+        const service = getSelectedService();
+        if (!service || service.price === 0) {
+            return { base: 0, height: 0, urgency: 0, complexity: 0, total: 0 };
+        }
+
+        const params = state.params;
+        let baseCost = service.price;
+
+        switch (service.unit) {
+            case 'м²':
+                baseCost = service.price * (params.area || 0);
+                break;
+            case 'м.п.':
+                baseCost = service.price * (params.length || 0);
+                break;
+            case 'этаж':
+                baseCost = service.price * (params.floors || 1);
+                baseCost *= getWeightFactor(params.weight || 0);
+                break;
+            case 'шт':
+            case 'окно':
+            case 'спуск':
+            case 'смена':
+            case 'операция':
+            case 'день':
+            case 'час':
+                baseCost = service.price * (params.count || 1);
+                break;
+            case 'тыс. руб.':
+                baseCost = service.price * 1000 * (params.count || 1);
+                break;
+            case 'по запросу':
+            case 'выезд':
+            case 'объект':
+                baseCost = service.price === 0 ? 0 : service.price;
+                break;
+            default:
+                baseCost = service.price;
+        }
+
+        if (service.min && baseCost < service.min) {
+            baseCost = service.min;
+        }
+
+        const heightFactor = HEIGHT_FACTORS[params.height]?.factor ?? 1;
+        const urgencyFactor = Number(params.urgency) || 1;
+        const complexityFactor = Number(params.complexity) || 1;
+
+        const heightCost = baseCost * (heightFactor - 1);
+        const urgencyCost = (baseCost + heightCost) * (urgencyFactor - 1);
+        const complexityCost = (baseCost + heightCost + urgencyCost) * (complexityFactor - 1);
+
+        let total = baseCost + heightCost + urgencyCost + complexityCost;
+        if (total < MIN_ORDER && service.price > 0) {
+            total = MIN_ORDER;
+        }
+
+        return {
+            base: Math.round(baseCost),
+            height: Math.round(heightCost),
+            urgency: Math.round(urgencyCost),
+            complexity: Math.round(complexityCost),
+            total: Math.round(total)
+        };
+    }
+
+    function getWeightFactor(weight) {
+        if (weight <= 200) return 1;
+        if (weight <= 400) return 1.35;
+        if (weight <= 600) return 1.65;
+        return 2;
+    }
+
+    function updatePreview() {
+        const service = getSelectedService();
+        if (!service || service.price === 0) {
+            selectors.previewPrice.textContent = service && service.price === 0 ? 'По запросу' : '0 ₽';
+            selectors.calculateBtn.disabled = service ? service.price === 0 : true;
+            return;
+        }
+        const cost = calculateCost();
+        selectors.previewPrice.textContent = `${cost.total.toLocaleString('ru-RU')} ₽`;
+    }
+
+    function renderResult() {
+        const service = getSelectedService();
+        if (!service || !state.cost) return;
+
+        selectors.resultService.innerHTML = `
+            <strong>${service.name}</strong>
+            <p>${servicesData[state.categoryKey].name}</p>
+        `;
+
+        selectors.finalPrice.textContent = `${state.cost.total.toLocaleString('ru-RU')} ₽`;
+        selectors.detailBase.textContent = `${state.cost.base.toLocaleString('ru-RU')} ₽`;
+        selectors.detailHeight.textContent = state.cost.height ? `+${state.cost.height.toLocaleString('ru-RU')} ₽` : '0 ₽';
+        selectors.detailUrgency.textContent = state.cost.urgency ? `+${state.cost.urgency.toLocaleString('ru-RU')} ₽` : '0 ₽';
+        selectors.detailComplexity.textContent = state.cost.complexity ? `+${state.cost.complexity.toLocaleString('ru-RU')} ₽` : '0 ₽';
+        selectors.detailTotal.textContent = `${state.cost.total.toLocaleString('ru-RU')} ₽`;
+
+        renderSummary();
+        selectors.summaryDate.textContent = new Date().toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    function renderSummary() {
+        selectors.summaryCategory.textContent = state.categoryKey ? servicesData[state.categoryKey].name : '—';
+        const service = getSelectedService();
+        selectors.summaryService.textContent = service ? service.name : '—';
+    }
+
+    function showStep(step) {
+        state.step = step;
+        selectors.steps.forEach((section, index) => {
+            section.classList.toggle('step--active', index === step - 1);
+        });
+
+        selectors.progressButtons.forEach((btn, index) => {
+            const btnStep = index + 1;
+            btn.classList.toggle('progress-step--active', btnStep === step);
+            btn.classList.toggle('progress-step--done', btnStep < step);
+            btn.setAttribute('aria-current', btnStep === step ? 'step' : 'false');
+            btn.setAttribute('aria-disabled', btnStep > step ? 'true' : 'false');
+        });
+
+        saveState();
+        document.querySelector('.calculator').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function resetStep3() {
+        state.params = {
+            ...state.params,
+            area: 50,
+            length: 10,
+            count: 1,
+            weight: 200,
+            floors: 5
+        };
+        renderSelectedService();
+        showToast('Параметры шага сброшены');
+    }
+
+    function resetCalculator() {
+        state.step = 1;
+        state.categoryKey = null;
+        state.serviceId = null;
+        state.cost = null;
+        state.params = {
+            area: 50,
+            length: 10,
+            count: 1,
+            weight: 200,
+            floors: 5,
+            height: 'low',
+            urgency: 1,
+            complexity: 1
+        };
+        selectors.serviceSearch.value = '';
+        selectors.summaryCopy.disabled = true;
+        renderCategories();
+        renderSummary();
+        showStep(1);
+        saveState();
+    }
+
+    function handleOrder() {
+        if (!state.cost) {
+            showToast('Сначала выполните расчёт');
+            return;
+        }
+        showToast('Заявка отправлена. Менеджер свяжется с вами.');
+    }
+
+    function copySummary() {
+        if (!state.cost) return;
+        const service = getSelectedService();
+        const text = [
+            'Расчёт услуг промышленного альпинизма:',
+            `Категория: ${servicesData[state.categoryKey].name}`,
+            `Услуга: ${service.name}`,
+            `Итоговая стоимость: ${state.cost.total.toLocaleString('ru-RU')} ₽`,
+            `База: ${state.cost.base.toLocaleString('ru-RU')} ₽`,
+            `Высота: ${state.cost.height.toLocaleString('ru-RU')} ₽`,
+            `Срочность: ${state.cost.urgency.toLocaleString('ru-RU')} ₽`,
+            `Сложность: ${state.cost.complexity.toLocaleString('ru-RU')} ₽`
+        ].join('\n');
+
+        navigator.clipboard?.writeText(text).then(() => showToast('Расчёт скопирован'));
+    }
+
+    function showToast(message) {
+        const toast = selectors.toast;
+        toast.textContent = message;
+        toast.classList.add('toast--visible');
+        setTimeout(() => toast.classList.remove('toast--visible'), 2500);
+    }
+
+    function saveState() {
+        try {
+            localStorage.setItem('alp-calculator', JSON.stringify(state));
+        } catch {
+            /* ignore */
+        }
+    }
+
+    function loadState() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('alp-calculator'));
+            if (!saved) return;
+            Object.assign(state, saved);
+            if (state.categoryKey) {
+                selectCategory(state.categoryKey);
+                if (state.serviceId) {
+                    selectService(state.serviceId);
+                    if (state.step) {
+                        showStep(state.step);
+                    }
+                    if (state.cost) {
+                        renderResult();
+                    }
+                }
+            }
+        } catch {
+            /* ignore */
+        }
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>
